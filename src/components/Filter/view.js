@@ -2,6 +2,16 @@ import React, { Component } from 'react'
 import './style.css';
 
 class Filter extends Component {
+  constructor(props){
+    super(props);
+    this.handleChange = this.handleChange.bind(this);
+  }
+
+  handleChange(evt){
+    const el = evt.target;
+    this.props.onFilter(el.getAttribute('data'), el.checked);
+  }
+
   render () {
     return(
       <div className="ui one column grid">
@@ -14,7 +24,7 @@ class Filter extends Component {
         </div>
         <div className="column">
           <div className="ui checkbox">
-            <input type="checkbox" name="option1" />
+            <input type="checkbox" name="option1" data="Accepted" onChange={this.handleChange}/>
             <label>
               Accepted
             </label>
@@ -22,7 +32,7 @@ class Filter extends Component {
         </div>
         <div className="column">
           <div className="ui checkbox">
-            <input type="checkbox" name="option2" />
+            <input type="checkbox" name="option2" data="Skipped" onChange={this.handleChange}/>
             <label>
               Skipped
             </label>
@@ -30,7 +40,7 @@ class Filter extends Component {
         </div>
         <div className="column">
           <div className="ui checkbox">
-            <input type="checkbox" name="option3" />
+            <input type="checkbox" name="option3" data="Time limit exceeded" onChange={this.handleChange}/>
             <label>
               Memory / Time limit exceeded
             </label>
@@ -38,7 +48,7 @@ class Filter extends Component {
         </div>
         <div className="column">
           <div className="ui checkbox">
-            <input type="checkbox" name="option4" />
+            <input type="checkbox" name="option4" data="Compilation error" onChange={this.handleChange}/>
             <label>
               Runtime / Compilation error
             </label>
@@ -46,7 +56,7 @@ class Filter extends Component {
         </div>
         <div className="column">
           <div className="ui checkbox">
-            <input type="checkbox" name="option5" />
+            <input type="checkbox" name="option5" data="Wrong answer" onChange={this.handleChange}/>
             <label>
               Wrong answer
             </label>

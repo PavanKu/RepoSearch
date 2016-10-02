@@ -13,12 +13,12 @@ class App extends Component {
   }
   componentDidMount() {
     //Pull data and push it to indexDB
-    // db.loadData()
-    // .then(res => {
-    //   this.setState({
-    //     isLoading: false
-    //   });
-    // })
+    db.loadData()
+    .then(res => {
+      this.setState({
+        isLoading: false
+      });
+    })
   }
 
   render() {

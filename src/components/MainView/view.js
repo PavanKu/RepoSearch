@@ -12,20 +12,49 @@ class MainView extends Component {
   constructor(props){
     super(props);
     this.state = {
-      result: []
+      filters:[],
+      result: [],
+      query:''
     };
 
     this.handleSearch = this.handleSearch.bind(this);
+    this.handleFilter = this.handleFilter.bind(this);
+  }
+
+  handleFilter(value, flag){
+    let filters = this.state.filters;
+    if(flag){
+      //Add
+      filters.push(value);
+    }else {
+      //remove
+      const index = filters.indexOf(value);
+      filters.splice(index, 1);
+    }
+    if(this.state.query || filters.length > 0){
+      db.search(this.state.query, this.state.filters)
+      .then(result => {
+        this.setState({
+          result: result,
+          filters: this.state.filters,
+          query:this.state.query
+        });
+      });
+    }
   }
 
   handleSearch(query){
     console.log(query);
-    db.search(query)
-    .then(result => {
-      this.setState({
-        result: result
+    if(query || this.state.filters.length > 0){
+      db.search(query, this.state.filters)
+      .then(result => {
+        this.setState({
+          result: result,
+          filters: this.state.filters,
+          query:query
+        });
       });
-    })
+    }
   }
 
   render () {
@@ -48,7 +77,7 @@ class MainView extends Component {
             </div>
           </div>
           <div className="ui four wide column">
-            <Filter></Filter>
+            <Filter onFilter={this.handleFilter}></Filter>
             <Statistic></Statistic>
           </div>
         </div>

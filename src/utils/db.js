@@ -8,6 +8,20 @@ if (IDBTransaction)
     IDBTransaction.READ_ONLY = IDBTransaction.READ_ONLY || 'readonly';
 }
 
+const queryFilter = (record, query) => {
+  return ((record.title.indexOf(query)!== -1) || (record.metadata.level.indexOf(query)!== -1) || (record.language.indexOf(query)!== -1));
+};
+
+const filter = (record, filters) => {
+  for (let value of filters) {
+    if(record.compiler_status.indexOf(value)!==-1){
+      return true;
+    }
+  }
+
+  return false;
+};
+
 class Database {
   constructor(name){
     if(indexedDB){
@@ -43,10 +57,10 @@ class Database {
   }
 
   loadData(){
-    const MAX_PAGE_COUNT = 1;
+    const MAX_PAGE_COUNT = 1347;
     const promiseList = [];
     const _self = this;
-    let api_url = 'http://hackerearth.0x10.info/api/ctz_coders?type=json&query=list_submissions&page=';
+    let api_url = 'https://hackerearth.0x10.info/api/ctz_coders?type=json&query=list_submissions&page=';
 
     for (let i = 0; i < MAX_PAGE_COUNT; i++) {
       let promise = new Promise((resolve, reject) => {
@@ -81,18 +95,28 @@ class Database {
     return Promise.all(promiseList);
   }
 
-  search(query){
+  search(query, filters){
     const _self = this;
     const result = [];
-    var queryReq = _self.db.transaction(['websites'], 'readwrite').objectStore('websites').openCursor();
+    let queryReq = _self.db.transaction(['websites'], 'readwrite').objectStore('websites').openCursor();
     return new Promise((resolve, reject)  => {
       queryReq.onsuccess = (evt) => {
         let cursor = evt.target.result;
         if(cursor){
           // console.log(cursor);
           const record = cursor.value;
-          if((record.title.indexOf(query)!== -1) || (record.source_code.indexOf(query)!== -1) || (record.language.indexOf(query)!== -1)){
-            result.push(record);
+          if(query && filters.length>0){
+            if(queryFilter(record, query) && filter(record, filters)){
+              result.push(record);
+            }
+          }else if (query) {
+            if(queryFilter(record, query)){
+              result.push(record);
+            }
+          }else if (filters.length>0) {
+            if(filter(record, filters)){
+              result.push(record);
+            }
           }
           cursor.continue();
         }else {
@@ -101,6 +125,59 @@ class Database {
           resolve(result);
         }
       }
+    });
+  }
+
+  getStats(){
+    const _self = this;
+    let queryReq = _self.db.transaction(['websites'], 'readwrite').objectStore('websites').openCursor();
+    const stats = {};
+    const compilation_result = {};
+    const language_used = {};
+    const problem_attempted = {};
+    const problem_level_attempted = {};
+
+    return new Promise((resolve, reject) => {
+      queryReq.onsuccess = (evt) => {
+        let cursor = evt.target.result;
+        if(cursor){
+          const record = cursor.value;
+          stats.submissionCount += 1;
+
+          if(!compilation_result[record.compiler_status]){
+            compilation_result[record.compiler_status] = 0;
+          }
+
+          compilation_result[record.compiler_status] += 1;
+
+          if(!language_used[record.language]){
+            language_used[record.language] = 0;
+          }
+
+          language_used[record.language] += 1;
+
+          if(!problem_attempted[record.title]){
+            problem_attempted[record.title] = record.metadata.users_attempted;
+          }
+
+          if(!problem_level_attempted[record.metadata.level]){
+            problem_level_attempted[record.metadata.level] = 0;
+          }
+
+          problem_level_attempted[record.metadata.level] += 1;
+
+          cursor.continue();
+        }else {
+          //No More records
+          //Show total submissions
+          //Top three compilation result
+          //Top three languages used
+          //Top three level used
+          //Top three problem attempted
+          //Top rated problem
+          resolve(stats)
+        }
+      };
     });
   }
 }
